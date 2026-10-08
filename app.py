@@ -20,7 +20,11 @@ def download():
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "quiet": True,
         "no_warnings": True,
-        "extractor_args": {"youtube": {"player_client": "web_embedded"}},
+        # ★ 重要: フォールバックチェーン（mweb→tv→web_safari）
+        "extractor_args": {"youtube": {"player_client": "mweb,tv,web_safari"}},
+        # ★ 重要: IPv4強制（IPv6はデータセンターでさらに厳しい）
+        "force_ipv4": True,
+        # Denoのパス
         "js_runtimes": {"deno": {"path": "/usr/local/bin/deno"}},
     }
     try:
