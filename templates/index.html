@@ -7,7 +7,9 @@
     body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 0 20px; }
     input { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
     button { padding: 12px 24px; font-size: 16px; cursor: pointer; }
-    #msg { margin-top: 16px; color: #555; }
+    #msg { margin-top: 16px; color: #555; white-space: pre-wrap; }
+    .error { color: #c00; }
+    .ok { color: #080; }
   </style>
 </head>
 <body>
@@ -20,22 +22,28 @@
     async function dl() {
       const url = document.getElementById("url").value;
       const msg = document.getElementById("msg");
-      msg.textContent = "⏳ ダウンロード中...（長い動画は数分）";
+      msg.className = "";
+      msg.textContent = "⏳ 処理中...（数分かかる場合あり）";
       try {
         const res = await fetch("/download", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({url})
         });
-        if (!res.ok) throw new Error(res.statusText);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || res.statusText);
+        }
         const blob = await res.blob();
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "video.mp4";
         a.click();
+        msg.className = "ok";
         msg.textContent = "✅ 完了";
       } catch(e) {
-        msg.textContent = "❌ エラー: " + e.message;
+        msg.className = "error";
+        msg.textContent = "❌ " + e.message;
       }
     }
     document.getElementById("url").addEventListener("keydown", e => {
