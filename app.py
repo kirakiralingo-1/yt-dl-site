@@ -20,8 +20,7 @@ def download():
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "quiet": True,
         "no_warnings": True,
-        # mweb = POトークンを使うクライアント（bgutilが生成）
-        # tv / web_safari = フォールバック
+        # mweb = POトークンで通る / tv = PO不要 / web_safari = 最終フォールバック
         "extractor_args": {"youtube": {"player_client": "mweb,tv,web_safari"}},
         "force_ipv4": True,
         "js_runtimes": {"deno": {"path": "/usr/local/bin/deno"}},
