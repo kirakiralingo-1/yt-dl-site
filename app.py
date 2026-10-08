@@ -20,10 +20,8 @@ def download():
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "quiet": True,
         "no_warnings": True,
-        # ★ 重要: データセンターIPのブロックを回避
         "extractor_args": {"youtube": {"player_client": "web_embedded"}},
-        # Denoのパスを明示
-        "js_runtimes": "deno:/usr/local/bin/deno",
+        "js_runtimes": {"deno": {"path": "/usr/local/bin/deno"}},
     }
     try:
         with YoutubeDL(opts) as ydl:
