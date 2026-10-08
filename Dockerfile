@@ -15,22 +15,31 @@ RUN curl -fsSL https://github.com/denoland/deno/releases/latest/download/deno-x8
     && chmod +x /usr/local/bin/deno \
     && rm /tmp/deno.zip
 
-# bgutil POTサーバー（latestブランチ、npm installに変更）
-RUN git clone --depth 1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil \
+# bgutil POTサーバー（branch 2.0.2 + npm ci）
+RUN git clone --single-branch --branch 2.0.2 \
+    https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil \
     && cd /opt/bgutil/server \
-    && npm install \
+    && npm ci \
     && npx tsc
 
-# Python
-RUN pip install --no-cache-dir "yt-dlp[default]" flask gunicorn bgutil-ytdlp-pot-provider
+# Python（yt-dlp + 公式プラグイン）
+RUN pip install --no-cache-dir \
+    "yt-dlp[default]" \
+    flask \
+    gunicorn \
+    bgutil-ytdlp-pot-provider
 
 WORKDIR /app
 COPY . .
 
-# ★ 重要: yt-dlpがPOTサーバーを見つけるための環境変数
-ENV YTDLP_POT_PROVIDER_URL=http://127.0.0.1:4416
-
 EXPOSE 10000
 
-# bgutilを起動 → 3秒待つ → gunicorn起動
-CMD ["sh", "-c", "node /opt/bgutil/server/build/main.js --port 4416 & sleep 3 && gunicorn -b 0.0.0.0:10000 -w 1 app:app"]   
+# bgutilサーバー起動 → 起動確認 → gunicorn起動
+CMD ["sh", "-c", "\
+    node /opt/bgutil/server/build/main.js --port 4416 & \
+    for i in $(seq 1 10); do \
+        curl -s http://127.0.0.1:4416/ping > /dev/null 2>&1 && break; \
+        sleep 1; \
+    done; \
+    echo 'bgutil server ready'; \
+    gunicorn -b 0.0.0.0:10000 -w 1 app:app"]   
