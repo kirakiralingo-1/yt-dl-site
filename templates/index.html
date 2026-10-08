@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>YT Downloader</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 0 20px; }
+    input { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; }
+    #msg { margin-top: 16px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>YouTube Downloader</h1>
+  <input id="url" placeholder="YouTube URLを貼ってEnter">
+  <button onclick="dl()">ダウンロード</button>
+  <p id="msg"></p>
+
+  <script>
+    async function dl() {
+      const url = document.getElementById("url").value;
+      const msg = document.getElementById("msg");
+      msg.textContent = "⏳ ダウンロード中...（長い動画は数分）";
+      try {
+        const res = await fetch("/download", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({url})
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        const blob = await res.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "video.mp4";
+        a.click();
+        msg.textContent = "✅ 完了";
+      } catch(e) {
+        msg.textContent = "❌ エラー: " + e.message;
+      }
+    }
+    document.getElementById("url").addEventListener("keydown", e => {
+      if (e.key === "Enter") dl();
+    });
+  </script>
+</body>
+</html>   
