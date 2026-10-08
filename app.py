@@ -20,22 +20,22 @@ def download():
         "outtmpl": os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s"),
         "quiet": True,
         "no_warnings": True,
-        # Docker内でDenoのパスを明示
+        # ★ 重要: データセンターIPのブロックを回避
+        "extractor_args": {"youtube": {"player_client": "web_embedded"}},
+        # Denoのパスを明示
         "js_runtimes": "deno:/usr/local/bin/deno",
-        # YouTubeのJSチャレンジを回避する回避策
-        "extractor_args": {"youtube": {"player_client": "default,-tv"}},
     }
     try:
         with YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
             fp = (info.get("requested_downloads") or [{}])[0].get("filepath")
             if not fp or not os.path.exists(fp):
-                return jsonify({"error": "ファイルが見つかりません"}), 500
+                return jsonify({"error": "ファイル生成に失敗"}), 500
             return send_file(fp, as_attachment=True, download_name="video.mp4")
     except DownloadError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": f"ダウンロード失敗: {str(e)}"}), 400
     except Exception as e:
-        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+        return jsonify({"error": str(e), "trace": traceback.format_exc()[-500:]}), 500
 
 if __name__ == "__main__":
     app.run(port=10000)   
